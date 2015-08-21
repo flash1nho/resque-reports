@@ -5,6 +5,7 @@ require 'stringio'
 require 'resque/reports/csv_report'
 
 class MyCsvReport < Resque::Reports::CsvReport
+  expire_in 1000
   queue :csv_reports
   source :select_data
   encoding UTF8
@@ -37,6 +38,22 @@ class MyCsvReport < Resque::Reports::CsvReport
 end
 
 class MyCsvDefaultsReport < Resque::Reports::CsvReport
+  source :select_data
+  encoding UTF8
+
+  directory File.join(Dir.tmpdir, 'resque-reports')
+
+  table do |element|
+    column 'Uno', "#{element} - is value"
+  end
+
+  def select_data
+    []
+  end
+end
+
+class MyCsvExpiredReport < Resque::Reports::CsvReport
+  expire_in 1
   source :select_data
   encoding UTF8
 
@@ -87,6 +104,22 @@ describe 'Resque::Reports::CsvReport successor' do
             First one,Second,Third
             decorated: one,was built test - is second,3'rd row element is: 3
           CSV
+      end
+
+      context 'when file exists' do
+        it { expect(subject.exists?).to be_true }
+      end
+    end
+  end
+
+  describe '#exists?' do
+    context 'when report was built' do
+      subject { MyCsvExpiredReport.new('was built test') }
+
+      after { subject.build }
+
+      context 'when file does not exists' do
+        it { expect(subject.exists?).to be_false }
       end
     end
   end

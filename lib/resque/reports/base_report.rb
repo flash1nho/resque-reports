@@ -28,6 +28,7 @@ module Resque
     #     queue :custom_reports # Resque queue name
     #     source :select_data # method called to retrieve report data
     #     encoding UTF8 # file encoding
+    #     expire_in 86_400 # cache time of the file, default: 86_400
     #
     #     # Specify in which directory to keep this type files
     #     directory File.join(Dir.tmpdir, 'resque-reports')
@@ -80,7 +81,8 @@ module Resque
                       :_encoding,
                       :_directory,
                       :_queue,
-                      :_output_filename
+                      :_output_filename,
+                      :_expire_in
 
         alias_method :super_extension, :_extension
         alias_method :extension, :_extension=
@@ -88,6 +90,7 @@ module Resque
         alias_method :directory, :_directory=
         alias_method :queue, :_queue=
         alias_method :output_filename, :_output_filename=
+        alias_method :expire_in, :_expire_in=
 
         def set_instance(obj)
           @instance = obj
@@ -138,7 +141,8 @@ module Resque
                      :_queue,
                      :create_block,
                      :set_instance,
-                     :_extension=
+                     :_extension=,
+                     :_expire_in
 
       def_delegators :@cache_file, :filename, :exists?, :ready?
       def_delegator Const::TO_SUPER, :super_extension
@@ -202,10 +206,11 @@ module Resque
 
       def init_cache_file
         self._extension = super_extension || DEFAULT_EXTENSION
+        options = {coding: _encoding, expire_in: _expire_in}
 
         @cache_file = CacheFile.new(_directory,
                                     generate_filename(@args, _extension),
-                                    coding: _encoding)
+                                    options)
       end
 
       # Method specifies how to output report data

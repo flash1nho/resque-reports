@@ -22,7 +22,7 @@ module Resque
       end
 
       def exists?
-        File.exists?(@filename)
+        !expired?(@filename)
       end
       alias_method :ready?, :exists?
 
@@ -73,7 +73,9 @@ module Resque
       end
 
       def expired?(fname)
-        File.file?(fname) && File.mtime(fname) + @expiration_time < Time.now
+        return true unless File.file?(fname)
+
+        File.mtime(fname) + @expiration_time < Time.now
       end
 
       def cache_files_array
