@@ -54,8 +54,10 @@ module Resque
       def with_tempfile
         yield(tempfile = Tempfile.new(Digest::MD5.hexdigest(@filename), :encoding => @coding))
       ensure
-        tempfile.close unless tempfile.closed?
-        tempfile.try(:unlink)
+        if tempfile
+          tempfile.close unless tempfile.closed?
+          tempfile.unlink
+        end
       end
 
       def prepare_cache_dir

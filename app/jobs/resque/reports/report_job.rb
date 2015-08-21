@@ -31,8 +31,7 @@ module Resque
         args = JSON.parse(args_json)
         force = args.pop
 
-        init_report(report_class, args)
-          .build(force)
+        init_report(report_class, args).build(force)
       end
 
       private

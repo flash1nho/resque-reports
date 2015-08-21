@@ -13,7 +13,8 @@ module Resque
         module ClassMethods
           def enqueue_to(*args) #:nodoc:
             queue = args.shift
-            meta = enqueued?(*args) and return meta
+            meta = enqueued?(*args)
+            return meta if meta.present?
 
             meta = Resque::Plugins::Meta::Metadata.new({'meta_id' => meta_id(args), 'job_class' => self.to_s})
             meta.save
